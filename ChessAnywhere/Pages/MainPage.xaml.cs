@@ -9,6 +9,7 @@ namespace ChessAnywhere.Pages
 {
     public partial class MainPage : ContentPage
     {
+        private const int boardSize = 8;
         private SKColor DarkColor { get; set; } = SKColors.Black;
         private SKColor LightColor { get; set; } = SKColors.White;
 
@@ -177,31 +178,64 @@ namespace ChessAnywhere.Pages
 
         private void DrawChessBoard(SKCanvas canvas, int tileWidth)
         {
-            for (var rowIndex = 0; rowIndex < 8; rowIndex++)
+            for (var rowIndex = 0; rowIndex < boardSize; rowIndex++)
             {
-                for (var columnIndex = 0; columnIndex < 8; columnIndex++)
+                for (var columnIndex = 0; columnIndex < boardSize; columnIndex++)
                 {
                     var currentTile = ChessBoard[rowIndex, columnIndex];
-                    canvas.DrawRect(
-                        rowIndex * tileWidth, 
-                        columnIndex * tileWidth,
-                        tileWidth, 
-                        tileWidth,
-                        new SKPaint() { Color = currentTile.IsDarkColor ? DarkColor : LightColor });
 
-                    if (currentTile.OccupiedBy != null)
+                    float x = columnIndex * tileWidth;
+                    float y = rowIndex * tileWidth;
+
+                    bool darkSquare = (rowIndex + columnIndex) % 2 == 1;
+
+                    using (var tilePaint = new SKPaint())
                     {
-                        canvas.DrawRect(
-                            
-                            );
+                        tilePaint.Style = SKPaintStyle.Fill;
+                        tilePaint.Color = darkSquare ? DarkColor : LightColor;
+                        tilePaint.IsAntialias = true;
+                        canvas.DrawRect(x, y, tileWidth, tileWidth, tilePaint);
+                    }
 
-                        canvas.DrawText(
-                            GetAbbreviation(currentTile.OccupiedBy.Name),
-                            x: ,
-                            y: ,
-                            SKTextAlign.Center,
-                            new SKFont(SKTypeface.Default),
-                            paint: );
+                    if (currentTile.OccupiedBy is not null)
+                    {
+                        var isDarkPiece = currentTile.OccupiedBy.IsDark;
+                        var pieceColor = isDarkPiece ? DarkColor : LightColor;
+                        var borderColor = isDarkPiece ? LightColor : DarkColor;
+
+                        var rectWidth = tileWidth * 0.5f;
+                        var rectHeight = tileWidth * 0.8f;
+
+                        var rectX = x + (tileWidth - rectWidth) / 2f;
+                        var rectY = y + (tileWidth - rectHeight) / 2f;
+
+                        using (var fillPaint = new SKPaint())
+                        {
+                            fillPaint.Style = SKPaintStyle.Fill;
+                            fillPaint.Color = pieceColor;
+                            fillPaint.IsAntialias = true;
+                            canvas.DrawRect(rectX, rectY, rectWidth, rectHeight, fillPaint);
+                        }
+
+                        using (var borderPaint = new SKPaint())
+                        {
+                            borderPaint.Style = SKPaintStyle.Stroke;
+                            borderPaint.StrokeWidth = 1;
+                            borderPaint.Color = borderColor;
+                            borderPaint.IsAntialias = true;
+                            canvas.DrawRect(rectX, rectY, rectWidth, rectHeight, borderPaint);
+                        }
+
+                        var abbr = GetAbbreviation(currentTile.OccupiedBy.Name);
+                        using (var textPaint = new SKPaint())
+                        {
+                            textPaint.Color = borderColor;
+                            textPaint.IsAntialias = true;
+                            var textX = rectX + rectWidth / 2f;
+                            var textY = rectY + rectHeight / 2f;
+
+                            canvas.DrawText(abbr, textX, textY, SKTextAlign.Center, new SKFont(SKTypeface.Default), textPaint);
+                        }
                     }
                 }
             }
